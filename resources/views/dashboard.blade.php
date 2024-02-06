@@ -18,7 +18,7 @@
                         </tr>
                         @foreach($projects as $project)
                             <tr>
-                                <td class="border-2 underline text-blue-500"><a href="{{ route('projectDetail', ['id' => $project->project_id]) }}">{{ $project->project_name }}</a></td>
+                                <td class="border-2 underline text-blue-500"><a href="{{ route('project.detail', ['project_id' => $project->project_id]) }}">{{ $project->project_name }}</a></td>
                                 <td class="border-2">{{ $project->estimation }}</td>
                                 <td class="border-2">{{ $project->release_date }}</td>
                                 <td class="border-2">{{ $project->work_date }}</td>

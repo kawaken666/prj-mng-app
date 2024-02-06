@@ -24,10 +24,10 @@ class ProjectStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'projectName' => 'string|max:255|required',
+            'project_name' => 'string|max:255|required',
             'estimation' => 'numeric|required',
-            'releaseDate' => 'required|date|after:today',
-            'workDate' => 'required|date',
+            'release_date' => 'required|date|after:today',
+            'work_date' => 'required|date',
             'member' => 'numeric|required'
         ];
     }

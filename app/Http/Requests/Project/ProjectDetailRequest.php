@@ -26,7 +26,7 @@ class ProjectDetailRequest extends FormRequest
     public function rules()
     {
         return [
-            'targetDate' => 'nullable|date'
+            'target_date' => 'nullable|date'
         ];
     }
 }
