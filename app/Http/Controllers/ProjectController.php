@@ -33,26 +33,26 @@ class ProjectController extends Controller
 
             // プロジェクトの登録
             $project = new Project;
-            $project->project_name = $request->projectName;
+            $project->project_name = $request->project_name;
             $project->estimation = $request->estimation;
-            $project->release_date = $request->releaseDate;
-            $project->work_date = $request->workDate . FIRST_DAY_OF_THE_MONTH;
+            $project->release_date = $request->release_date;
+            $project->work_date = $request->work_date . FIRST_DAY_OF_THE_MONTH;
             $project->save();
 
             // 直前に登録したプロジェクトのIDを取得
-            $projectId = $project->id;
+            $project_id = $project->id;
 
             //　プロジェクトメンバーの登録
             $data = [];
 
             //　メンバーが単数の場合のデータ詰め
             if(!is_array($request->member)){
-                array_push($data, ['user_id' => $request->member, 'project_id' => $projectId]);
+                array_push($data, ['user_id' => $request->member, 'project_id' => $project_id]);
 
             //　メンバーが複数の場合のデータ詰め
             }else{
                 foreach($request->member as $member){
-                    array_push($data, ['user_id' => $member, 'project_id' => $projectId]);
+                    array_push($data, ['user_id' => $member, 'project_id' => $project_id]);
                 }
             }
             ProjectMember::insert($data);

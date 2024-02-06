@@ -7,9 +7,9 @@
 
         <!-- プロジェクト名 -->
         <div class="mt-4 mx-40">
-            <x-input-label for="projectName">プロジェクト名</x-input-label>
-            <x-text-input id="projectName" class="block mt-1 w-9/12" type="text" name="projectName" :value="old('projectName')" required autofocus autocomplete="projectName" />
-            <x-input-error :messages="$errors->get('projectName')" class="mt-2" />
+            <x-input-label for="project_name">プロジェクト名</x-input-label>
+            <x-text-input id="project_name" class="block mt-1 w-9/12" type="text" name="project_name" :value="old('project_name')" required autofocus autocomplete="project_name" />
+            <x-input-error :messages="$errors->get('project_name')" class="mt-2" />
         </div>
 
         <!-- 見積もり工数（人日） -->
@@ -21,16 +21,16 @@
 
         <!-- リリース予定日 -->
         <div class="mt-4 mx-40">
-            <x-input-label for="releaseDate">リリース予定日</x-input-label>
-            <input id="releaseDate" class="block mt-1 w-9/12" type="date" name="releaseDate" required/>
-            <x-input-error :messages="$errors->get('releaseDate')" class="mt-2" />
+            <x-input-label for="release_date">リリース予定日</x-input-label>
+            <input id="release_date" class="block mt-1 w-9/12" type="date" name="release_date" required/>
+            <x-input-error :messages="$errors->get('release_date')" class="mt-2" />
         </div>
 
         <!-- 稼働予定月 -->
         <div class="mt-4 mx-40">
-            <x-input-label for="workDate">稼働予定月</x-input-label>
-            <input id="workDate" class="block mt-1 w-9/12" type="month" name="workDate" required />
-            <x-input-error :messages="$errors->get('workDate')" class="mt-2" />
+            <x-input-label for="work_date">稼働予定月</x-input-label>
+            <input id="work_date" class="block mt-1 w-9/12" type="month" name="work_date" required />
+            <x-input-error :messages="$errors->get('work_date')" class="mt-2" />
         </div>
 
         <!-- メンバ登録 -->
