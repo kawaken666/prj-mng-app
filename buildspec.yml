@@ -1,0 +1,34 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws --version
+      # 環境変数の設定。your_...の部分に環境に応じた値を入れること
+      - AWS_ACCOUNT_ID=your_aws_account_id
+      - ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+      - REPOSITORY_URI=${ECR_URI}/your_ecr_repository_path
+      - CONTAINER_NAME=your_ecs_container_name
+      # コミットハッシュの先頭7桁をタグに利用する
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      # ECRログイン
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URI
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      # ビルドに使用するDockerfileの指定。末尾の"."はビルドコンテキスト
+      - docker build -t $REPOSITORY_URI:latest -f .docker/app/apache/Dockerfile.prod .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      # ビルドしたイメージをECRにPUSH。latestタグを用いたデプロイ用に2つPUSH
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+    files: imagedefinitions.json

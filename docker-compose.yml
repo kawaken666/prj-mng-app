@@ -1,0 +1,166 @@
+version: '3.9'
+
+# 永続化
+volumes:
+  db-store:
+  # db-store-test:
+  minio:
+    driver: local
+
+services:
+  # PHP
+  app:
+    container_name: app_${APP_NAME}
+    #*# 【apache】を選択 #*#
+    # build:
+    # context: .
+    # dockerfile: ./.docker/app/apache/Dockerfile
+    # volumes:
+    #   - type: bind
+    #     source: ./
+    #     target: /var/www/app
+
+    #*# 【nginx】を選択 #*#
+    build:
+      context: .
+      dockerfile: ./.docker/app/nginx/Dockerfile
+    volumes:
+      - type: bind
+        source: ./
+        target: /app
+
+    ports:
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+      #*#（APP_PORT）Apache時のみ有効にする #*#
+      # - '${APP_PORT:-80}:80'
+    depends_on:
+      - db
+      - mailpit
+      # - meilisearch
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  #*# webサーバー(Nginxのみ有効にする。Apacheはwebを内包しているので不要) #*#
+  web:
+    container_name: nginx_${APP_NAME}
+    build:
+      context: .
+      dockerfile: ./.docker/web/Dockerfile
+    volumes:
+      - type: bind
+        source: ./
+        target: /app
+    ports:
+      - '${APP_PORT:-80}:80'
+    depends_on:
+      - app
+    restart: always
+
+  #*# データベース #*#
+  db:
+    container_name: db_${APP_NAME}
+    build:
+      context: .
+      dockerfile: ./.docker/db/mysql/Dockerfile
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    volumes:
+      - type: volume
+        source: db-store
+        target: /var/lib/mysql
+        volume:
+          nocopy: true
+      - ./.docker/db/mysql/1_default.sql:/docker-entrypoint-initdb.d/1_default.sql
+    environment:
+      #.envを参照
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+
+  #*# テスト用データベース #*#
+  #*# インメモリのsqliteを使用しているので、mysql等でテストする場合に使用 #*#
+  # db-testing:
+  #   container_name: db_${APP_NAME}_testing
+  #   build:
+  #     context: .
+  #     dockerfile: ./.docker/db/mysql/Dockerfile
+  #   ports:
+  #     - '13306:3306'
+  #   volumes:
+  #     - type: volume
+  #       source: db-store-test
+  #       target: /var/lib/mysql
+  #       volume:
+  #         nocopy: true
+  #     - ./.docker/db/mysql/1_default.sql:/docker-entrypoint-initdb.d/2_create-test-db.sql
+  #   environment:
+  #     #.envを参照
+  #     MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+  #     MYSQL_DATABASE: 'testing'
+  #     MYSQL_USER: '${DB_USERNAME}'
+  #     MYSQL_PASSWORD: '${DB_PASSWORD}'
+  #     MYSQL_ALLOW_EMPTY_PASSWORD: 1
+
+  #*# Mailer #*#
+  mailpit:
+    container_name: mailpit_${APP_NAME}
+    image: 'axllent/mailpit:v1.3.8'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+
+  #*# minio S3の代用 #*#
+  minio:
+    image: minio/minio:RELEASE.2023-01-18T04-36-38Z
+    container_name: s3-minio_${APP_NAME}
+    ports:
+      - '9000:9000'
+      - '9090:9090'
+    environment:
+      MINIO_ROOT_USER: access_key
+      MINIO_ROOT_PASSWORD: secret_key
+    entrypoint: bash
+    command: -c "/opt/bin/minio server /data --address :9000 --console-address :9090"
+    volumes:
+      - 'minio:/data'
+
+  #*# minioのbucket作成 #*#
+  # コンテナ起動後にminio bucketが作成されたら自動的に終了されます。
+  create-bucket:
+    container_name: minio_create_bucket_${APP_NAME}
+    image: minio/mc:RELEASE.2023-08-08T17-23-59Z
+    entrypoint: ['']
+    command:
+      - /bin/sh
+      - -c
+      - |
+        until (mc config host add minio http://minio:9000 access_key secret_key) do echo 'wait until add host' && sleep 1; done;
+        mc mb minio/$AWS_BUCKET
+        mc policy set private minio/$AWS_BUCKET
+    environment:
+      MINIO_ROOT_USER: access_key
+      MINIO_ROOT_PASSWORD: secret_key
+      AWS_UPLOADS_BULK_DOWNLOAD_BUCKET: ${AWS_BUCKET}
+    depends_on:
+      - minio
+
+  #*# 全文検索の高速化 #*#
+  # meilisearch:
+  #   container_name: meilisearch_${APP_NAME}
+  #   image: "getmeili/meilisearch:v1.0.1"
+  #   ports:
+  #     - "${FORWARD_MEILISEARCH_PORT:-7700}:7700"
+  #   volumes:
+  #     - 'meilisearch:/data.ms'
+  #   healthcheck:
+  #     test:
+  #       - CMD
+  #       - wget
+  #       - "--no-verbose"
+  #       - "--spider"
+  #       - "http://localhost:7700/health"
+  #     retries: 3
+  #     timeout: 5s

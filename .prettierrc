@@ -1,0 +1,35 @@
+{
+    "printWidth": 120,
+    "singleQuote": true,
+    "semi": true,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "tabs": false,
+    "tabWidth": 4,
+    "plugins": ["prettier-plugin-blade", "prettier-plugin-tailwindcss"],
+    "bracketSameLine": true,
+    "overrides": [
+        {
+            "files": ["*.yml", "*.yaml"],
+            "options": {
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": [".env.example"],
+            "options": {
+                "parser": "env"
+            }
+        },
+        {
+            "files": ["*.blade.php"],
+            "options": {
+                "phpVersion": "8.1",
+                "parser": "blade",
+                "tabWidth": 2,
+                "printWidth": 150,
+                "sortTailwindcssClasses": true
+            }
+        }
+    ]
+}
