@@ -1,0 +1,1 @@
+<select {{ $attributes->merge(['name' => '', 'class' => 'rounded-lg mt-2 mb-2']) }}>{{ $slot }}</select>

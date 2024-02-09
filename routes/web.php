@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/project/detail', [ProjectDetailController::class, 'index'])->name('project.detail');
     Route::post('/project/detail', [ProjectDetailController::class, 'index'])->name('project.detail');
     Route::get('/project/detail/edit', [ProjectDetailController::class, 'edit'])->name('project.detail.edit');
+    Route::post('/project/detail/update', [ProjectDetailController::class, 'edit'])->name('project.detail.update');
 });
 
 require __DIR__.'/auth.php';

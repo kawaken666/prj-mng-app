@@ -1,0 +1,1 @@
+<textarea {{ $attributes->merge(['name' => '']) }} maxlength="255" rows="5" class="mt-2 rounded-lg w-full">{{ $slot }}</textarea>
