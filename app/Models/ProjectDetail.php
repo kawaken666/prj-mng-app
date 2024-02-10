@@ -16,7 +16,9 @@ class ProjectDetail extends Model
         'status',
         'project_overview',
         'name',
+        'project_detail_id',
         'result_man_hour',
-        'member_overview'
+        'member_overview',
+        'overview'
     ]; 
 }

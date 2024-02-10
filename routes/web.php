@@ -30,9 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/project', [ProjectController::class, 'create'])->name('project.register');
     Route::post('/project', [ProjectController::class, 'store'])->name('project.store');
     Route::get('/project/detail', [ProjectDetailController::class, 'index'])->name('project.detail');
-    Route::post('/project/detail', [ProjectDetailController::class, 'index'])->name('project.detail');
+    Route::post('/project/detail', [ProjectDetailController::class, 'index'])->name('project.detail');  // postは日付変更時のリクエスト
     Route::get('/project/detail/edit', [ProjectDetailController::class, 'edit'])->name('project.detail.edit');
-    Route::post('/project/detail/update', [ProjectDetailController::class, 'edit'])->name('project.detail.update');
+    Route::post('/project/detail/update', [ProjectDetailController::class, 'update'])->name('project.detail.update');
 });
 
 require __DIR__.'/auth.php';

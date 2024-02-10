@@ -5,7 +5,7 @@
 
     <x-input-error :messages="$errors->all()" class="mt-2" />
 
-    <div class="max-w-7xl mx-auto mt-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto mt-4 sm:px-6 lg:px-8 py-8">
         {{-- 日付見出しと日付指定フォーム --}}
         <div class="flex justify-between items-center bg-fuchsia-400 overflow-hidden shadow-sm sm:rounded-lg p-3 font-bold text-2xl leading-tight">
             {{ $project_detail[0]->date }}
