@@ -28,7 +28,7 @@ class ProjectStoreRequest extends FormRequest
             'estimation' => 'numeric|required',
             'release_date' => 'required|date',
             'work_date' => 'required|date',
-            'member[]' => 'numeric|required'
+            'member.*' => 'numeric|required'
         ];
     }
 }

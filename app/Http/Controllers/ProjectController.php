@@ -28,7 +28,6 @@ class ProjectController extends Controller
      * 登録処理
      */
     public function store(ProjectStoreRequest $request){
-        dd($request);
         try{
             DB::beginTransaction();
 
