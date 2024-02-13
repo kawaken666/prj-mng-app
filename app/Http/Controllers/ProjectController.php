@@ -27,7 +27,8 @@ class ProjectController extends Controller
     /**
      * 登録処理
      */
-    public function store(ProjectStoreRequest $request){ 
+    public function store(ProjectStoreRequest $request){
+        dd($request);
         try{
             DB::beginTransaction();
 
@@ -46,15 +47,15 @@ class ProjectController extends Controller
             $data = [];
 
             //　メンバーが単数の場合のデータ詰め
-            if(!is_array($request->member)){
+/*             if(!is_array($request->member)){
                 array_push($data, ['user_id' => $request->member, 'project_id' => $project_id]);
 
             //　メンバーが複数の場合のデータ詰め
-            }else{
+            }else{ */
                 foreach($request->member as $member){
                     array_push($data, ['user_id' => $member, 'project_id' => $project_id]);
                 }
-            }
+            // }
             ProjectMember::insert($data);
             
             DB::commit();

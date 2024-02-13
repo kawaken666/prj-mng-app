@@ -53,7 +53,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['single', 'manipulation'],
             'ignore_exceptions' => false,
         ],
 
@@ -117,6 +117,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'manipulation' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/manipulation.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+        ],
+
     ],
 
 ];
