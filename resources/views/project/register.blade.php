@@ -2,6 +2,9 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">プロジェクト登録</h2>
     </x-slot>
+
+    <x-input-error :messages="$errors->all()" class="mmax-w-7xl p-4 sm:px-6 lg:px-8" />
+    
     <form method="POST" action="{{ route('project.store') }}">
         @csrf
 
@@ -37,9 +40,8 @@
         <div class="mt-4 mx-40">
             <x-input-label>メンバー</x-input-label>
             @foreach($users as $user)
-            <input class='ml-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm' id="member" type="checkbox" name="member" value="{{ $user->id }}"> {{ $user->name }}
+                <input class='ml-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm' id="member" type="checkbox" name="member[]" value="{{ $user->id }}"> {{ $user->name }}
             @endforeach
-            <x-input-error :messages="$errors->get('member')" class="mt-2" />
         </div>
         <div class="flex items-center mt-4 mx-40">
             <x-primary-button class="ml-4">登録</x-primary-button>
