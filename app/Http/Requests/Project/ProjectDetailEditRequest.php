@@ -3,10 +3,8 @@
 namespace App\Http\Requests\Project;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
 
-class ProjectDetailRequest extends FormRequest
+class ProjectDetailEditRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,7 +24,8 @@ class ProjectDetailRequest extends FormRequest
     public function rules()
     {
         return [
-            'date' => 'nullable|date'
+            'project_id' => 'required|numeric',
+            'date' => 'required|date'
         ];
     }
 }

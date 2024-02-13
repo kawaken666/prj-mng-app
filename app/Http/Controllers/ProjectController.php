@@ -32,7 +32,7 @@ class ProjectController extends Controller
             DB::beginTransaction();
 
             // プロジェクトの登録
-            $project = new Project;
+            $project = new Project();
             $project->project_name = $request->project_name;
             $project->estimation = $request->estimation;
             $project->release_date = $request->release_date;

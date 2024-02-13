@@ -22,14 +22,14 @@
         <!-- リリース予定日 -->
         <div class="mt-4 mx-40">
             <x-input-label for="release_date">リリース予定日</x-input-label>
-            <input id="release_date" class="block mt-1 w-9/12" type="date" name="release_date" required/>
+            <input id="release_date" class="block mt-1 w-9/12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" type="date" name="release_date" required/>
             <x-input-error :messages="$errors->get('release_date')" class="mt-2" />
         </div>
 
         <!-- 稼働予定月 -->
         <div class="mt-4 mx-40">
             <x-input-label for="work_date">稼働予定月</x-input-label>
-            <input id="work_date" class="block mt-1 w-9/12" type="month" name="work_date" required />
+            <input id="work_date" class="block mt-1 w-9/12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" type="month" name="work_date" required />
             <x-input-error :messages="$errors->get('work_date')" class="mt-2" />
         </div>
 
@@ -37,7 +37,7 @@
         <div class="mt-4 mx-40">
             <x-input-label>メンバー</x-input-label>
             @foreach($users as $user)
-            <input class='ml-1' id="member" type="checkbox" name="member" value="{{ $user->id }}"> {{ $user->name }}
+            <input class='ml-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm' id="member" type="checkbox" name="member" value="{{ $user->id }}"> {{ $user->name }}
             @endforeach
             <x-input-error :messages="$errors->get('member')" class="mt-2" />
         </div>
