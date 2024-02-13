@@ -26,9 +26,9 @@ class ProjectStoreRequest extends FormRequest
         return [
             'project_name' => 'string|max:255|required',
             'estimation' => 'numeric|required',
-            'release_date' => 'required|date|after:today',
+            'release_date' => 'required|date',
             'work_date' => 'required|date',
-            'member' => 'numeric|required'
+            'member.*' => 'numeric|required'
         ];
     }
 }
