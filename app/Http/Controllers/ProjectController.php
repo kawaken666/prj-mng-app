@@ -45,16 +45,10 @@ class ProjectController extends Controller
             //　プロジェクトメンバーの登録
             $data = [];
 
-            //　メンバーが単数の場合のデータ詰め
-/*             if(!is_array($request->member)){
-                array_push($data, ['user_id' => $request->member, 'project_id' => $project_id]);
-
-            //　メンバーが複数の場合のデータ詰め
-            }else{ */
-                foreach($request->member as $member){
-                    array_push($data, ['user_id' => $member, 'project_id' => $project_id]);
-                }
-            // }
+            foreach($request->member as $member){
+                array_push($data, ['user_id' => $member, 'project_id' => $project_id]);
+            }
+            
             ProjectMember::insert($data);
             
             DB::commit();
