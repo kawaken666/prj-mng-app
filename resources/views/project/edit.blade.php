@@ -93,7 +93,8 @@
                     </div>
                 @endforeach
             </div>
-            <div class="flex justify-end">
+            <div class="flex justify-between">
+                <x-secondary-button class="mt-6" :onclick=$back_url>戻る</x-secondary-button>
                 <x-primary-button class="mt-6">更新</x-primary-button>
             </div>
         </form>

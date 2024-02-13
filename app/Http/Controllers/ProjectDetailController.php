@@ -28,9 +28,33 @@ class ProjectDetailController extends Controller
         // プロジェクト詳細取得
         $project_detail = $this->getProjectDetail($request->project_id, $date);
 
-        dd($project_detail[0]->date);
+        if($project_detail->isNotEmpty()){
+            // 対象日付のプロジェクト詳細が存在する場合
+            return view('project.detail', ['project_detail' => $project_detail]);
+        }else{
+            // 対象日付のプロジェクト詳細が存在しない場合
+            // プロジェクトメンバー情報を取得
+            $project_member = ProjectMember::
+                                leftjoin('users', 'project_members.user_id', '=', 'users.id')
+                                ->select('name', 'users.id')
+                                ->where('project_id', $request->project_id)
+                                ->get();
 
-        return view('project.detail', ['project_detail' => $project_detail]);
+            // 画面表示用の配列生成
+            foreach($project_member as $member){
+                $project_detail_not_existed[] = [
+                        'project_id' => $request->project_id,
+                        'date' => $date,
+                        'status' => EnumProjectStatus::登録なし->name,
+                        'project_overview' => '',
+                        'name' => $member->name,
+                        'id' => $member->id,
+                        'result_man_hour' => '',
+                        'member_overview' => ''
+                ];
+            }
+            return view('project.detail-not-existed', ['project_detail_not_existed' => $project_detail_not_existed]);
+        }
     }
 
      /**
@@ -47,7 +71,39 @@ class ProjectDetailController extends Controller
         // プロジェクト詳細取得
         $project_detail = $this->getProjectDetail($request->project_id, $request->date);
 
-        return view('project.edit', ['project_detail' => $project_detail]);
+        if($project_detail->isNotEmpty()){
+            // 対象日付のプロジェクト詳細が存在する場合
+            // 戻るボタンURL生成
+            $back_url = 'location.href=\'./?project_id=' . $project_detail[0]->project_id . '&date=' . $project_detail[0]->date . '\'';
+            return view('project.edit', ['project_detail' => $project_detail, 'back_url' => $back_url]);
+        }else{
+            // 対象日付のプロジェクト詳細が存在しない場合
+            // プロジェクトメンバー情報を取得
+            $project_member = ProjectMember::
+                                leftjoin('users', 'project_members.user_id', '=', 'users.id')
+                                ->select('name', 'users.id')
+                                ->where('project_id', $request->project_id)
+                                ->get();
+
+            // 画面表示用の配列生成
+            foreach($project_member as $member){
+                $project_detail_not_existed[] = [
+                        'project_id' => $request->project_id,
+                        'date' => $request->date,
+                        'status' => EnumProjectStatus::登録なし->name,
+                        'project_overview' => '',
+                        'name' => $member->name,
+                        'id' => $member->id,
+                        'result_man_hour' => '',
+                        'member_overview' => ''
+                ];
+            }
+
+            // 戻るボタンURL生成
+            $back_url = 'location.href=\'./?project_id=' . $project_detail_not_existed[0]['project_id'] . '&date=' . $project_detail_not_existed[0]['date'] . '\'';
+
+            return view('project.edit-not-existed', ['project_detail_not_existed' => $project_detail_not_existed, 'back_url' => $back_url]);
+        }
     }
 
     /**
@@ -92,7 +148,6 @@ class ProjectDetailController extends Controller
                                                         ->get();
 
             if($project_member_detail->isEmpty()){
-                dd($array);
                 // メンバー別プロジェクト詳細が存在しない場合、INSERT
                 $project_member_detail = new ProjectMemberDetail();
                 $project_member_detail->project_detail_id = $project_detail->first()->project_detail_id;
@@ -108,7 +163,7 @@ class ProjectDetailController extends Controller
             }
         }
 
-        return redirect()->route('project.detail', ['project_id' => session('project_id')])->with('status', '更新されました');
+        return redirect()->route('project.detail', ['project_id' => session('project_id'), 'date' => session('date')])->with('status', '更新されました');
     }
     
     // 以下、privateメソッド------------------------------
@@ -134,17 +189,10 @@ class ProjectDetailController extends Controller
             leftjoin('project_member_details', 'project_details.project_detail_id', '=', 'project_member_details.project_detail_id')
             ->join('users', 'project_member_details.user_id', '=', 'users.id')
             ->select('project_id', 'project_details.status', 'project_details.overview as project_overview', 'project_details.date', 'project_member_details.result_man_hour', 'project_member_details.overview as member_overview', 'users.name', 'users.id')
-            ->where('project_details.project_detail_id', $project_id)
+            ->where('project_details.project_id', $project_id)
             ->where('date', $date)
             ->get();
-
-        // プロジェクトメンバー情報を取得
-        $project_member = ProjectMember::
-                        leftjoin('users', 'project_members.user_id', '=', 'users.id')
-                        ->select('name', 'users.id')
-                        ->where('project_id', $project_id)
-                        ->get();
-
+            
         if($project_detail->isNotEmpty()){
             // 対象日付のプロジェクト詳細が登録されていた場合
             // statusのコード値をコード名称に変換
@@ -161,21 +209,6 @@ class ProjectDetailController extends Controller
                 default:
                     $project_detail[0]->status = EnumProjectStatus::登録なし->name;
                     break;
-            }
-        }else{
-            // 対象日付のプロジェクト詳細が登録されてない場合
-            foreach($project_member as $member){
-                // 登録がなかった場合のモデルインスタンス生成処理
-                $project_detail = [
-                    'project_id' => $project_id,
-                    'date' => $date,
-                    'status' => EnumProjectStatus::登録なし->name,
-                    'project_overview' => '',
-                    'name' => $member->name,
-                    'id' => $member->id,
-                    'result_man_hour' => '',
-                    'member_overview' => ''
-                ];
             }
         }
         return $project_detail;
