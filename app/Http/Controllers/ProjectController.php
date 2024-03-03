@@ -44,7 +44,7 @@ class ProjectController extends Controller
 
             // プロジェクト、ユーザー間の中間テーブルへの登録
             foreach($request->user_id as $user_id){
-                $project->users()->attach($user_id, ['created_at' => now()]);
+                $project->users()->attach($user_id);
             }
             
             DB::commit();

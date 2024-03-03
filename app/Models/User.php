@@ -46,7 +46,7 @@ class User extends Authenticatable
      * 属しているプロジェクトを取得
      */
     public function projects(){
-        return $this->belongsToMany(Project::class);
+        return $this->belongsToMany(Project::class)->withTimestamps();
     }
 
     /**

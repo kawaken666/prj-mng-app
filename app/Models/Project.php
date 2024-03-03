@@ -20,6 +20,6 @@ class Project extends Model
      * プロジェクトに所属するユーザーを取得
      */
     public function users(){
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 }
