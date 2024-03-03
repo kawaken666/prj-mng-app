@@ -43,10 +43,10 @@ class User extends Authenticatable
     ];
 
     /**
-     * プロジェクトメンバーを取得
+     * 属しているプロジェクトを取得
      */
-    public function projectMembers(){
-        return $this->hasMany(ProjectMember::class);
+    public function projects(){
+        return $this->belongsToMany(Project::class);
     }
 
     /**

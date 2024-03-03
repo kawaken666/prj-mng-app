@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Project\ProjectStoreRequest;
 use App\Models\Project;
 use App\Models\User;
-use App\Models\ProjectMember;
+use App\Models\ProjectUser;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,17 +39,13 @@ class ProjectController extends Controller
             $project->work_date = $request->work_date . FIRST_DAY_OF_THE_MONTH;
             $project->save();
 
-            // 直前に登録したプロジェクトのIDを取得
-            $project_id = $project->id;
+            // 登録したプロジェクトを取得
+            $project = Project::find($project->id);
 
-            //　プロジェクトメンバーの登録
-            $data = [];
-
-            foreach($request->member as $member){
-                array_push($data, ['user_id' => $member, 'project_id' => $project_id]);
+            // プロジェクト、ユーザー間の中間テーブルへの登録
+            foreach($request->user_id as $user_id){
+                $project->users()->attach($user_id, ['created_at' => now()]);
             }
-            
-            ProjectMember::insert($data);
             
             DB::commit();
 

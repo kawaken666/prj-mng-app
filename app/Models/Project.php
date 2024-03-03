@@ -17,9 +17,9 @@ class Project extends Model
     }
 
     /**
-     * プロジェクトメンバーを取得
+     * プロジェクトに所属するユーザーを取得
      */
-    public function projectMembers(){
-        return $this->hasMany(ProjectMember::class);
+    public function users(){
+        return $this->belongsToMany(User::class);
     }
 }
