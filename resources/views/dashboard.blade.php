@@ -12,7 +12,7 @@
                     <thead class=" bg-fuchsia-400">
                         <tr>
                             <th class="px-6 py-3">プロジェクト名</th>
-                            <th class="px-6 py-3">見積もり</th>
+                            <th class="px-6 py-3">見積もり(人日)</th>
                             <th class="px-6 py-3">リリース予定日</th>
                             <th class="px-6 py-3">稼働予定月</th>
                         </tr>
