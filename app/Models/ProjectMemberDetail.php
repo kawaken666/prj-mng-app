@@ -12,14 +12,14 @@ class ProjectMemberDetail extends Model
     /**
      * メンバー別プロジェクト詳細を所有しているプロジェクト詳細を取得
      */
-    public function ProjectDetail(){
+    public function projectDetail(){
         return $this->belongsTo(ProjectDetail::class);
     }
 
     /**
      * メンバー別プロジェクト詳細を所有しているユーザーを取得
      */
-    public function User(){
+    public function user(){
         return $this->belongsTo(User::class);
     }    
 }

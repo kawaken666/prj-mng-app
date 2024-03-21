@@ -20,7 +20,7 @@
                     <tbody>
                     @foreach($projects as $project)
                         <tr class="text-center">
-                            <td class="px-6 py-3 underline text-blue-500"><a href="{{ route('project.detail', ['project_id' => $project->project_id]) }}">{{ $project->project_name }}</a></td>
+                            <td class="px-6 py-3 underline text-blue-500"><a href="{{ route('project.detail', ['project_id' => $project->id]) }}">{{ $project->project_name }}</a></td>
                             <td class="px-6 py-3">{{ $project->estimation }}</td>
                             <td class="px-6 py-3">{{ $project->release_date }}</td>
                             <td class="px-6 py-3">{{ $project->work_date }}</td>

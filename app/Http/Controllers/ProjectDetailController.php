@@ -8,10 +8,11 @@ use App\Http\Requests\Project\ProjectDetailEditRequest;
 use App\Http\Requests\Project\ProjectDetailUpdateRequest;
 use App\Models\Project;
 use App\Models\ProjectDetail;
-use App\Models\ProjectMember;
 use App\Models\ProjectMemberDetail;
-use Illuminate\Http\Request;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Log;
+use App\Dto\ProjectDetail\DispPrjDetailDto;
+use App\Dto\ProjectDetail\DispPrjMemDetailDto;
 
 class ProjectDetailController extends Controller
 {
@@ -30,18 +31,34 @@ class ProjectDetailController extends Controller
 
         if($project_detail->isNotEmpty()){
             // 対象日付のプロジェクト詳細が存在する場合
-            return view('project.detail', ['project_detail' => $project_detail]);
+            // 表示用Dto生成
+            $dispPrjDetailDto = new DispPrjDetailDto(
+                $project_detail->first()->project_id,
+                $project_detail->first()->status,
+                $project_detail->first()->overview,
+                $project_detail->first()->date,
+            );
+
+            $dispPrjMemDetailDtoList = [];
+
+            foreach($project_detail->first()->projectMemberDetails as $projectMemberDetail){
+                $dispPrjMemDetailDto = new DispPrjMemDetailDto(
+                    $projectMemberDetail->user->name,
+                    $projectMemberDetail->result_man_hour,
+                    $projectMemberDetail->overview,
+                );
+                array_push($dispPrjMemDetailDtoList, $dispPrjMemDetailDto);
+            }
+
+            return view('project.detail', ['dispPrjDetailDto' => $dispPrjDetailDto, 'dispPrjMemDetailDtoList' => $dispPrjMemDetailDtoList]);
         }else{
             // 対象日付のプロジェクト詳細が存在しない場合
-            // プロジェクトメンバー情報を取得
-            $project_member = ProjectMember::
-                                leftjoin('users', 'project_members.user_id', '=', 'users.id')
-                                ->select('name', 'users.id')
-                                ->where('project_id', $request->project_id)
-                                ->get();
+            // プロジェクトメンバーを取得して表示用情報を作成する
+            $project = Project::where('id', '=', $request->project_id)
+                                        ->with('users')
+                                        ->get();
 
-            // 画面表示用の配列生成
-            foreach($project_member as $member){
+            foreach($project->first()->users as $member){
                 $project_detail_not_existed[] = [
                         'project_id' => $request->project_id,
                         'date' => $date,
@@ -78,15 +95,12 @@ class ProjectDetailController extends Controller
             return view('project.edit', ['project_detail' => $project_detail, 'back_url' => $back_url]);
         }else{
             // 対象日付のプロジェクト詳細が存在しない場合
-            // プロジェクトメンバー情報を取得
-            $project_member = ProjectMember::
-                                leftjoin('users', 'project_members.user_id', '=', 'users.id')
-                                ->select('name', 'users.id')
-                                ->where('project_id', $request->project_id)
-                                ->get();
+            // プロジェクトメンバーを取得して表示用情報を作成する
+            $project_member = Project::where('id', '=', $request->project_id)
+                ->with('users')
+                ->get();
 
-            // 画面表示用の配列生成
-            foreach($project_member as $member){
+            foreach($project_member->first()->users as $member){
                 $project_detail_not_existed[] = [
                         'project_id' => $request->project_id,
                         'date' => $request->date,
@@ -130,8 +144,8 @@ class ProjectDetailController extends Controller
             
             // 後続処理のために$project_detailをINSERTしたもので上書き
             $project_detail = ProjectDetail::where('project_id', session('project_id'))
-            ->where('date', session('date'))
-            ->get();
+                                            ->where('date', session('date'))
+                                            ->get();
 
         }else{
             // プロジェクト詳細が存在する場合、UPDATE
@@ -148,16 +162,16 @@ class ProjectDetailController extends Controller
                                                         ->get();
 
             if($project_member_detail->isEmpty()){
-                // メンバー別プロジェクト詳細が存在しない場合、INSERT
+                // メンバー別プロジェクト詳細が存在しない場合、INSERT   
                 $project_member_detail = new ProjectMemberDetail();
-                $project_member_detail->project_detail_id = $project_detail->first()->project_detail_id;
+                $project_member_detail->project_detail_id = $project_detail->first()->id;
                 $project_member_detail->result_man_hour = $array[0];
                 $project_member_detail->overview = $array[1];
                 $project_member_detail->user_id = $array[2];
                 $project_member_detail->save();
             }else{
                 // メンバー別プロジェクト詳細が存在する場合、UPDATE
-                ProjectMemberDetail::where('project_detail_id', $project_detail->first()->project_detail_id)
+                ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
                             ->where('user_id', $array[2])
                             ->update(['result_man_hour' => $array[0], 'overview' => $array[1]]);
             }
@@ -172,7 +186,7 @@ class ProjectDetailController extends Controller
      * 対象プロジェクト存在チェック
      */
     private function existsProject($project_id){
-        $project = Project::where('project_id', $project_id)->get();
+        $project = Project::where('id', $project_id)->get();
         // 存在しない場合、ダッシュボードにリダイレクト                
         if($project->isEmpty()){
             Log::debug('プロジェクト未存在');
@@ -184,33 +198,32 @@ class ProjectDetailController extends Controller
      * プロジェクト詳細取得メソッド
      */
     private function getProjectDetail($project_id, $date){
-        // プロジェクト詳細とそれに紐づくメンバーごとの状況詳細を取得
-        $project_detail = ProjectDetail::
-            leftjoin('project_member_details', 'project_details.project_detail_id', '=', 'project_member_details.project_detail_id')
-            ->join('users', 'project_member_details.user_id', '=', 'users.id')
-            ->select('project_id', 'project_details.status', 'project_details.overview as project_overview', 'project_details.date', 'project_member_details.result_man_hour', 'project_member_details.overview as member_overview', 'users.name', 'users.id')
-            ->where('project_details.project_id', $project_id)
-            ->where('date', $date)
+        // プロジェクト詳細とそれに紐づくメンバーごとの状況詳細を取得       
+        $project_detail = ProjectDetail::where('project_id', '=', $project_id)
+            ->where('date', '=', $date)
+            ->with(['projectMemberDetails', 'projectMemberDetails.user'])
             ->get();
+        // dd($project_detail);
             
         if($project_detail->isNotEmpty()){
             // 対象日付のプロジェクト詳細が登録されていた場合
             // statusのコード値をコード名称に変換
-            switch ($project_detail[0]->status) {
+            switch ($project_detail->first()->status) {
                 case EnumProjectStatus::オンスケ->value:
-                    $project_detail[0]->status = EnumProjectStatus::オンスケ->name;
+                    $project_detail->first()->status = EnumProjectStatus::オンスケ->name;
                     break;
                 case EnumProjectStatus::遅延->value:
-                    $project_detail[0]->status = EnumProjectStatus::遅延->name;
+                    $project_detail->first()->status = EnumProjectStatus::遅延->name;
                     break;
                 case EnumProjectStatus::前倒し->value:
-                    $project_detail[0]->status = EnumProjectStatus::前倒し->name;
+                    $project_detail->first()->status = EnumProjectStatus::前倒し->name;
                     break;
                 default:
-                    $project_detail[0]->status = EnumProjectStatus::登録なし->name;
+                    $project_detail->first()->status = EnumProjectStatus::登録なし->name;
                     break;
             }
         }
         return $project_detail;
+        
     }
 }

@@ -12,7 +12,7 @@ class ProjectDetail extends Model
     /**
      * プロジェクト詳細を所有しているプロジェクトを取得
      */
-    public function Project(){
+    public function project(){
         return $this->belongsTo(Project::class);
     }
 
