@@ -41,4 +41,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * 属しているプロジェクトを取得
+     */
+    public function projects(){
+        return $this->belongsToMany(Project::class)->withTimestamps();
+    }
+
+    /**
+     * メンバー別プロジェクト詳細を取得
+     */
+    public function projectMemberDetails(){
+        return $this->hasMany(ProjectMemberDetail::class);
+    }
 }

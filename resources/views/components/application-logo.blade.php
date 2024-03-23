@@ -1,1 +1,1 @@
-<img src ="../../../static/app_logo.png" width="10%" height="10%">
+<img src ="../../../static/Home.png" width="50%" height="50%">

@@ -40,7 +40,7 @@
         <div class="mt-4 mx-40">
             <x-input-label>メンバー</x-input-label>
             @foreach($users as $user)
-                <input class='ml-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm' id="member" type="checkbox" name="member[]" value="{{ $user->id }}"> {{ $user->name }}
+                <input class='ml-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm' id="user_id" type="checkbox" name="user_id[]" value="{{ $user->id }}"> {{ $user->name }}
             @endforeach
         </div>
         <div class="flex items-center mt-4 mx-40">

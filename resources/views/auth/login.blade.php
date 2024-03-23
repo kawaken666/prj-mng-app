@@ -4,7 +4,7 @@
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
-
+        
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('メールアドレス')" />
@@ -32,7 +32,7 @@
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('register') }}">
                 会員登録
             </a>
@@ -41,10 +41,10 @@
                     パスワードを忘れた方はこちら
                 </a>
             @endif
+        </div>
 
-            <x-primary-button class="ml-3">
-                {{ __('ログイン') }}
-            </x-primary-button>
+        <div class="mt-4">
+            <x-primary-button>ログイン</x-primary-button>
         </div>
     </form>
 </x-guest-layout>
