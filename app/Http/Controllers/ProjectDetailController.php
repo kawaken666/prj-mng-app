@@ -13,6 +13,8 @@ use App\Http\Requests\Project\ProjectDetailUpdateRequest;
 use App\Models\Project;
 use App\Models\ProjectDetail;
 use App\Models\ProjectMemberDetail;
+use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ProjectDetailController extends Controller
@@ -82,54 +84,64 @@ class ProjectDetailController extends Controller
         // プロジェクト存在チェック
         $this->_existsProject(session('project_id'));
 
-        // DB更新（プロジェクト詳細）
-        // プロジェクト詳細存在チェック
-        $project_detail = ProjectDetail::where('project_id', session('project_id'))
-            ->where('date', session('date'))
-            ->get();
+        DB::beginTransaction();
 
-        if ($project_detail->isEmpty()) {
-            // プロジェクト詳細が存在しない場合、INSERT
-            $project_detail = new ProjectDetail();
-            $project_detail->project_id = session('project_id');
-            $project_detail->status = $request->status;
-            $project_detail->overview = $request->overview;
-            $project_detail->date = session('date');
-            $project_detail->save();
-
-            // 後続処理のために$project_detailをINSERTしたもので上書き
+        try {
+            // DB更新（プロジェクト詳細）
+            // プロジェクト詳細存在チェック
             $project_detail = ProjectDetail::where('project_id', session('project_id'))
                 ->where('date', session('date'))
                 ->get();
 
-        } else {
-            // プロジェクト詳細が存在する場合、UPDATE
-            ProjectDetail::where('project_id', session('project_id'))
-                ->where('date', session('date'))
-                ->update(['status' => $request->status, 'overview' => $request->overview]);
-        }
+            if ($project_detail->isEmpty()) {
+                // プロジェクト詳細が存在しない場合、INSERT
+                $project_detail = new ProjectDetail();
+                $project_detail->project_id = session('project_id');
+                $project_detail->status = $request->status;
+                $project_detail->overview = $request->overview;
+                $project_detail->date = session('date');
+                $project_detail->save();
 
-        // DB更新（メンバー別プロジェクト詳細）
-        for ($i = 0; $i < count($request->user_id); $i++) {
-            // メンバー別プロジェクト詳細存在チェック
-            $project_member_detail = ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
-                ->where('user_id', $request->user_id[$i])
-                ->get();
+                // 後続処理のために$project_detailをINSERTしたもので上書き
+                $project_detail = ProjectDetail::where('project_id', session('project_id'))
+                    ->where('date', session('date'))
+                    ->get();
 
-            if ($project_member_detail->isEmpty()) {
-                // メンバー別プロジェクト詳細が存在しない場合、INSERT
-                $project_member_detail = new ProjectMemberDetail();
-                $project_member_detail->project_detail_id = $project_detail->first()->id;
-                $project_member_detail->result_man_hour = $request->result_man_hour[$i];
-                $project_member_detail->overview = $request->overview[$i];
-                $project_member_detail->user_id = $request->user_id[$i];
-                $project_member_detail->save();
             } else {
-                // メンバー別プロジェクト詳細が存在する場合、UPDATE
-                ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
-                    ->where('user_id', $request->user_id[$i])
-                    ->update(['result_man_hour' => $request->result_man_hour[$i], 'overview' => $request->member_overview[$i]]);
+                // プロジェクト詳細が存在する場合、UPDATE
+                ProjectDetail::where('project_id', session('project_id'))
+                    ->where('date', session('date'))
+                    ->update(['status' => $request->status, 'overview' => $request->overview]);
             }
+
+            // DB更新（メンバー別プロジェクト詳細）
+            for ($i = 0; $i < count($request->user_id); $i++) {
+                // メンバー別プロジェクト詳細存在チェック
+                $project_member_detail = ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
+                    ->where('user_id', $request->user_id[$i])
+                    ->get();
+
+                if ($project_member_detail->isEmpty()) {
+                    // メンバー別プロジェクト詳細が存在しない場合、INSERT
+                    $project_member_detail = new ProjectMemberDetail();
+                    $project_member_detail->project_detail_id = $project_detail->first()->id;
+                    $project_member_detail->result_man_hour = $request->result_man_hour[$i];
+                    $project_member_detail->overview = $request->overview[$i];
+                    $project_member_detail->user_id = $request->user_id[$i];
+                    $project_member_detail->save();
+                } else {
+                    // メンバー別プロジェクト詳細が存在する場合、UPDATE
+                    ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
+                        ->where('user_id', $request->user_id[$i])
+                        ->update(['result_man_hour' => $request->result_man_hour[$i], 'overview' => $request->member_overview[$i]]);
+                }
+            }
+
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::error('DB更新できなかったためロールバックしました。', ['e' => $e]);
+
+            return redirect()->route('project.detail', ['project_id' => session('project_id'), 'date' => session('date'), 'errors' => ['更新できませんでした']]);
         }
 
         return redirect()->route('project.detail', ['project_id' => session('project_id'), 'date' => session('date')])->with('status', '更新されました');
@@ -190,7 +202,6 @@ class ProjectDetailController extends Controller
      */
     private function _createDispDtoExists($project_detail)
     {
-
         $dispPrjDetailDto = new DispPrjDetailDto(
             $project_detail->first()->project_id,
             $project_detail->first()->status,

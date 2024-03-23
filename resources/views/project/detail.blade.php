@@ -52,8 +52,7 @@
                 <div class="py-3">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
-                            <h1 class="font-semibold text-xl text-gray-800 leading-tight">{{ $dispPrjMemDetailDto->name }}
-                            </h1>
+                            <h1 class="font-semibold text-xl text-gray-800 leading-tight">{{ $dispPrjMemDetailDto->name }}</h1>
                             <hr><br>
                             <h1 class="font-semibold text-sm text-gray-800 leading-tight">消費工数</h1>
                             <hr>
