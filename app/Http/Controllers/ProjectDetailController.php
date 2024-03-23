@@ -110,25 +110,25 @@ class ProjectDetailController extends Controller
         }
 
         // DB更新（メンバー別プロジェクト詳細）
-        // メンバー別プロジェクト詳細存在チェック
-        foreach (array_map(null, $request->result_man_hour, $request->member_overview, $request->user_id) as $array) {
-            $project_member_detail = ProjectMemberDetail::where('project_detail_id', $project_detail->first()->project_detail_id)
-                ->where('user_id', $array[2])
+        for ($i = 0; $i < count($request->user_id); $i++) {
+            // メンバー別プロジェクト詳細存在チェック
+            $project_member_detail = ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
+                ->where('user_id', $request->user_id[$i])
                 ->get();
 
             if ($project_member_detail->isEmpty()) {
                 // メンバー別プロジェクト詳細が存在しない場合、INSERT
                 $project_member_detail = new ProjectMemberDetail();
                 $project_member_detail->project_detail_id = $project_detail->first()->id;
-                $project_member_detail->result_man_hour = $array[0];
-                $project_member_detail->overview = $array[1];
-                $project_member_detail->user_id = $array[2];
+                $project_member_detail->result_man_hour = $request->result_man_hour[$i];
+                $project_member_detail->overview = $request->overview[$i];
+                $project_member_detail->user_id = $request->user_id[$i];
                 $project_member_detail->save();
             } else {
                 // メンバー別プロジェクト詳細が存在する場合、UPDATE
                 ProjectMemberDetail::where('project_detail_id', $project_detail->first()->id)
-                    ->where('user_id', $array[2])
-                    ->update(['result_man_hour' => $array[0], 'overview' => $array[1]]);
+                    ->where('user_id', $request->user_id[$i])
+                    ->update(['result_man_hour' => $request->result_man_hour[$i], 'overview' => $request->member_overview[$i]]);
             }
         }
 

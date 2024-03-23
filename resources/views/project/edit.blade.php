@@ -7,8 +7,7 @@
 
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
         {{-- 日付見出し --}}
-        <div
-            class="flex justify-between items-center bg-fuchsia-400 overflow-hidden shadow-sm sm:rounded-lg p-3 font-bold text-2xl leading-tight">
+        <div class="flex justify-between items-center bg-fuchsia-400 overflow-hidden shadow-sm sm:rounded-lg p-3 font-bold text-2xl leading-tight">
             {{ $dispPrjDetailDto->date }}
         </div>
 
@@ -27,8 +26,7 @@
                             <h1 class="font-semibold text-xl text-gray-800 leading-tight">進捗ステータス</h1>
                             <hr>
                             <x-input-pulldown name="status">
-                                <option value="0" @if($dispPrjDetailDto->status === "オンスケ") selected @endif>オンスケ
-                                </option>
+                                <option value="0" @if($dispPrjDetailDto->status === "オンスケ") selected @endif>オンスケ</option>
                                 <option value="1" @if($dispPrjDetailDto->status === "遅延") selected @endif>遅延</option>
                                 <option value="2" @if($dispPrjDetailDto->status === "前倒し") selected @endif>前倒し</option>
                             </x-input-pulldown>
@@ -41,8 +39,7 @@
                         <div class="p-6">
                             <h1 class="font-semibold text-xl text-gray-800 leading-tight">状況</h1>
                             <hr>
-                            <x-input-textarea name="overview">{{ $dispPrjDetailDto->project_overview }}
-                            </x-input-textarea>
+                            <x-input-textarea name="overview">{{ $dispPrjDetailDto->project_overview }}</x-input-textarea>
                         </div>
                     </div>
                 </div>
@@ -63,7 +60,7 @@
                             <hr>
                             <x-input-pulldown name="result_man_hour[]" class="h-10">
                                 @for ($i = 0; $i <= 12; $i+=0.5) 
-                                    <option value={{ $i }} @if($dispPrjMemDetailDto->result_man_hour === $i) selected @endif>{{ $i }}</option>
+                                    <option value={{ $i }} @if($dispPrjMemDetailDto->result_man_hour == $i) selected @endif>{{ $i }}</option>
                                 @endfor
                             </x-input-pulldown>
                             <h1 class="font-semibold text-sm text-gray-800 leading-tight">状況</h1>
