@@ -23,60 +23,23 @@ class ProjectDetailController extends Controller
     public function index(ProjectDetailRequest $request)
     {
         // 対象プロジェクト存在チェック
-        $this->existsProject($request->project_id);
+        $this->_existsProject($request->project_id);
 
         // 日付設定（フォームに対象日付がない場合は当日）
         $date = (isset($request->date)) ? $request->date : date('Y-m-d');
 
         // データ取得
-        $project_detail = $this->getProjectDetail($request->project_id, $date);
+        $project_detail = $this->_getProjectDetail($request->project_id, $date);
 
         if ($project_detail->isNotEmpty()) {
             // 対象日付のプロジェクト詳細が存在する場合の表示Dto生成
-            $dispPrjDetailDto = new DispPrjDetailDto(
-                $project_detail->first()->project_id,
-                $project_detail->first()->status,
-                $project_detail->first()->overview,
-                $project_detail->first()->date,
-            );
-
-            $dispPrjMemDetailDtoList = [];
-
-            foreach ($project_detail->first()->projectMemberDetails as $projectMemberDetail) {
-                $dispPrjMemDetailDto = new DispPrjMemDetailDto(
-                    $projectMemberDetail->user->name,
-                    $projectMemberDetail->result_man_hour,
-                    $projectMemberDetail->overview,
-                );
-                array_push($dispPrjMemDetailDtoList, $dispPrjMemDetailDto);
-            }
-
+            $dispDto = $this->_createDispDtoExists($project_detail);
         } else {
             // 対象日付のプロジェクト詳細が存在しない場合の表示Dto生成
-            $project = Project::where('id', '=', $request->project_id)
-                ->with('users')
-                ->get();
-
-            $dispPrjDetailDto = new DispPrjDetailDto(
-                $project->first()->id,
-                EnumProjectStatus::登録なし->name,
-                '',
-                $date,
-            );
-
-            $dispPrjMemDetailDtoList = [];
-
-            foreach ($project->first()->users as $user) {
-                $dispPrjMemDetailDto = new DispPrjMemDetailDto(
-                    $user->name,
-                    '',
-                    '',
-                );
-                array_push($dispPrjMemDetailDtoList, $dispPrjMemDetailDto);
-            }
+            $dispDto = $this->_createDispDtoNoExists($request->project_id, $date);
         }
 
-        return view('project.detail', ['dispPrjDetailDto' => $dispPrjDetailDto, 'dispPrjMemDetailDtoList' => $dispPrjMemDetailDtoList]);
+        return view('project.detail', ['dispPrjDetailDto' => $dispDto['dispPrjDetailDto'], 'dispPrjMemDetailDtoList' => $dispDto['dispPrjMemDetailDtoList']]);
     }
 
     /**
@@ -89,42 +52,26 @@ class ProjectDetailController extends Controller
         session(['date' => $request->date]);
 
         // 対象プロジェクト存在チェック
-        $this->existsProject($request->project_id);
+        $this->_existsProject($request->project_id);
 
         // プロジェクト詳細取得
-        $project_detail = $this->getProjectDetail($request->project_id, $request->date);
+        $project_detail = $this->_getProjectDetail($request->project_id, $request->date);
 
         if ($project_detail->isNotEmpty()) {
-            // 対象日付のプロジェクト詳細が存在する場合
-            // 戻るボタンURL生成
-            $back_url = 'location.href=\'./?project_id=' . $project_detail[0]->project_id . '&date=' . $project_detail[0]->date . '\'';
+            // 対象日付のプロジェクト詳細が存在する場合の表示Dto生成
+            $dispDto = $this->_createDispDtoExists($project_detail);
 
-            return view('project.edit', ['project_detail' => $project_detail, 'back_url' => $back_url]);
+            // 戻るボタンURL生成
+            $back_url = 'location.href=\'./?project_id=' . $project_detail->first()->project_id . '&date=' . $project_detail->first()->date . '\'';
         } else {
-            // 対象日付のプロジェクト詳細が存在しない場合
-            // プロジェクトメンバーを取得して表示用情報を作成する
-            $project_member = Project::where('id', '=', $request->project_id)
-                ->with('users')
-                ->get();
-
-            foreach ($project_member->first()->users as $member) {
-                $project_detail_not_existed[] = [
-                    'project_id' => $request->project_id,
-                    'date' => $request->date,
-                    'status' => EnumProjectStatus::登録なし->name,
-                    'project_overview' => '',
-                    'name' => $member->name,
-                    'id' => $member->id,
-                    'result_man_hour' => '',
-                    'member_overview' => '',
-                ];
-            }
+            // 対象日付のプロジェクト詳細が存在しない場合の表示Dto生成
+            $dispDto = $this->_createDispDtoNoExists($request->project_id, $request->date);
 
             // 戻るボタンURL生成
-            $back_url = 'location.href=\'./?project_id=' . $project_detail_not_existed[0]['project_id'] . '&date=' . $project_detail_not_existed[0]['date'] . '\'';
-
-            return view('project.edit-not-existed', ['project_detail_not_existed' => $project_detail_not_existed, 'back_url' => $back_url]);
+            $back_url = 'location.href=\'./?project_id=' . $request->project_id . '&date=' . $request->date . '\'';
         }
+
+        return view('project.edit', ['dispPrjDetailDto' => $dispDto['dispPrjDetailDto'], 'dispPrjMemDetailDtoList' => $dispDto['dispPrjMemDetailDtoList'], 'back_url' => $back_url]);
     }
 
     /**
@@ -133,7 +80,7 @@ class ProjectDetailController extends Controller
     public function update(ProjectDetailUpdateRequest $request)
     {
         // プロジェクト存在チェック
-        $this->existsProject(session('project_id'));
+        $this->_existsProject(session('project_id'));
 
         // DB更新（プロジェクト詳細）
         // プロジェクト詳細存在チェック
@@ -193,7 +140,7 @@ class ProjectDetailController extends Controller
     /**
      * 対象プロジェクト存在チェック
      */
-    private function existsProject($project_id)
+    private function _existsProject($project_id)
     {
         $project = Project::where('id', $project_id)->get();
         // 存在しない場合、ダッシュボードにリダイレクト
@@ -205,16 +152,15 @@ class ProjectDetailController extends Controller
     }
 
     /**
-     * プロジェクト詳細取得メソッド
+     * プロジェクト詳細取得
      */
-    private function getProjectDetail($project_id, $date)
+    private function _getProjectDetail($project_id, $date)
     {
         // プロジェクト詳細とそれに紐づくメンバーごとの状況詳細を取得
         $project_detail = ProjectDetail::where('project_id', '=', $project_id)
             ->where('date', '=', $date)
             ->with(['projectMemberDetails', 'projectMemberDetails.user'])
             ->get();
-        // dd($project_detail);
 
         if ($project_detail->isNotEmpty()) {
             // 対象日付のプロジェクト詳細が登録されていた場合
@@ -237,5 +183,70 @@ class ProjectDetailController extends Controller
 
         return $project_detail;
 
+    }
+
+    /**
+     * プロジェクト詳細存在時の表示用Dto生成
+     */
+    private function _createDispDtoExists($project_detail)
+    {
+
+        $dispPrjDetailDto = new DispPrjDetailDto(
+            $project_detail->first()->project_id,
+            $project_detail->first()->status,
+            $project_detail->first()->overview,
+            $project_detail->first()->date,
+        );
+
+        $dispPrjMemDetailDtoList = [];
+
+        foreach ($project_detail->first()->projectMemberDetails as $projectMemberDetail) {
+            $dispPrjMemDetailDto = new DispPrjMemDetailDto(
+                $projectMemberDetail->user->id,
+                $projectMemberDetail->user->name,
+                $projectMemberDetail->result_man_hour,
+                $projectMemberDetail->overview,
+            );
+            array_push($dispPrjMemDetailDtoList, $dispPrjMemDetailDto);
+        }
+
+        return $dispDto = [
+            'dispPrjDetailDto' => $dispPrjDetailDto,
+            'dispPrjMemDetailDtoList' => $dispPrjMemDetailDtoList,
+        ];
+    }
+
+    /**
+     * プロジェクト詳細未存在時の表示用Dto生成
+     */
+    private function _createDispDtoNoExists($project_id, $date)
+    {
+        $project = Project::where('id', '=', $project_id)
+            ->with('users')
+            ->get();
+
+        $dispPrjDetailDto = new DispPrjDetailDto(
+            $project->first()->id,
+            EnumProjectStatus::登録なし->name,
+            '',
+            $date,
+        );
+
+        $dispPrjMemDetailDtoList = [];
+
+        foreach ($project->first()->users as $user) {
+            $dispPrjMemDetailDto = new DispPrjMemDetailDto(
+                $user->id,
+                $user->name,
+                '',
+                '',
+            );
+            array_push($dispPrjMemDetailDtoList, $dispPrjMemDetailDto);
+        }
+
+        return $dispDto = [
+            'dispPrjDetailDto' => $dispPrjDetailDto,
+            'dispPrjMemDetailDtoList' => $dispPrjMemDetailDtoList,
+        ];
     }
 }
